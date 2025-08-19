@@ -7,55 +7,7 @@
 
 
 --------------
-# # 실전 문제
-# from datetime import datetime, timedelta
-#
-# # literal을 쓰지 않고 상수를 쓰는 이유
-# # 2라는 숫자에 "이게 배송일이야"라고 배경을 모르는 사람들 (미래의 동료 또는 나 자신)에게 알려주는 역할을 합니다,
-# # magic number 를 쓰지 말자
-# DELIVERY_DAYS = 2
-#
-#
-# def _is_holiday(day: datetime) -> bool:
-#     return day.weekday() >= 5
-#
-#
-# def get_eta(purchase_date: datetime) -> datetime:
-#     current_date = purchase_date
-#     remaining_days = DELIVERY_DAYS
-#
-#     while remaining_days > 0:
-#         current_date += timedelta(days=1)
-#         if not _is_holiday(current_date):
-#             remaining_days -= 1
-#
-#     return current_date
-#
-#
-# def test_get_eta_2023_12_01() -> None:
-#     result = get_eta(datetime(2023, 12, 1))
-#     assert result == datetime(2023, 12, 4)
-#
-#
-# def test_get_eta_2024_12_31() -> None:
-#     """
-#     공휴일 정보가 없어서 1월 1일도 평일로 취급됩니다.
-#     """
-#     result = get_eta(datetime(2024, 12, 31))
-#     assert result == datetime(2025, 1, 2)
-#
-#
-# def test_get_eta_2024_02_28() -> None:
-#     result = get_eta(datetime(2024, 2, 28))
-#     assert result == datetime(2024, 3, 1)
-#
-#
-# def test_get_eta_2023_02_28() -> None:
-#     result = get_eta(datetime(2023, 2, 28))
-#     assert result == datetime(2023, 3, 2)
-
-
-----------
+아래는 단위테스트에 관한 코드로 우리가 작성한 코드들이 예상한 대로 작동을 하는지 검증하는 것
 # # 제품 코드
 # def add(a: int, b: int) -> int:
 #     return a + b
@@ -72,3 +24,157 @@
 #
 #     # Then:
 #     assert result == 2
+----------
+coverage에 관한 내용들
+
+- 단위 테스트를 전부 실행해도 한 번도 실행되지 않은 코드는 곧 테스트를 안한 코드다.
+- 테스트 안 된 지점에서 버그가 나면 할 말이 없다. (테스트 안 한 개발자의 잘못)
+- 따라서 커버리지 계산을 통해 “지금 내가 수정한 코드가 제대로 테스트 되고 있는가” 를 판단할 필요가 있다.
+- 커버리지의 정의는 frac(테스트 도중 한 번이라도 실행된 제품코드)/(전체 제품 코드) 이다.
+- 커버리지를 계산할 때 테스트 코드는 omit 하고, 제품 코드만 계산에 들어가도록 해야 한다.
+- 커버리지 실행을 하려면 아래 코드를 실행하면 된다
+    - `poetry run coverage run -m pytest .`
+    - `poetry run coverage report -m`
+    - `poetry run coverage html`(한 눈에 보기 쉬움)
+
+-----------
+자동화 테스트가 필요한 이유
+
+
+코드에 버그가 반복되면 점점 코딩을 하는게 두려워 집니다.
+지금 잘 돌아가는 코드에서 아주 조금만 수정을 해도 어디에서 버그가 발생하는지 도무지 알 수가 없는 것이죠
+
+테스트는 우리가 작성한 코드가 의도한 대로 동작하는지를 검증해 줍니다.
+사람이 아니라 코드로 코드를 검증하기 때문에 반복적으로 실행하는데 아주 유리합니다.
+컴퓨터는 실수도 하지 않고, 반복되는 작업에 지치는 일도 없기 때문입니다.
+
+결과적으로 테스트는 개발자가 "수정을 두려워하지 않도록 만들어줍니다.” 이것이 우리에게 테스트가 필요한 이유입니다.
+
+-----------
+아래의 캐싱은 CI 소요시간을 줄이는 방법에 관한 것이다.
+매번 github 에 push 할 때마다 black 부터 pytest 까지 모든 검사가 자동으로 실행되도록 한다.
+1. poetry 다운 및 설치
+2. 모든 종속성 다운 및 설치
+
+name: CI
+
+on:
+  push:
+
+jobs:
+  static-analysis:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out the codes
+        uses: actions/checkout@v2
+
+      - name: Setup python environment
+        id: setup-python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.13"
+
+      - name: Cache Poetry
+        id: cache-poetry
+        uses: actions/cache@v4
+        with:
+          key: poetry-1.8.5
+          path: ~/.local/ # poetry 는 ~/.local 에 설치되므로, 해당 디렉터리를 캐시합니다.
+
+      - name: Install Poetry
+        if: steps.cache-poetry.outputs.cache-hit != 'true'  # cache 불러오기에 실패했을 때에만 설치합니다.
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 - --version 1.8.5
+
+      - name: Register Poetry bin
+        run: echo "${HOME}/.poetry/bin" >> $GITHUB_PATH
+
+      - name: Cache dependencies
+        id: cache-venv
+        uses: actions/cache@v4
+        with:
+          # 파이썬 버전이 바뀌었을 때, lock 파일이나 toml 파일이 바뀌었을때 종속성을 재설치합니다.
+          # 바뀐 것이 없는 경우에는 캐싱된 종속성을 사용합니다.
+          key: python-${{ steps.setup-python.outputs.python-version }}-poetry-lock-${{ hashFiles('poetry.lock') }}-toml-${{ hashFiles('pyproject.toml') }}-poetry-1.8.5
+          path: /home/runner/.cache/pypoetry/virtualenvs/
+
+      - name: Install dependencies
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: poetry install --no-root
+
+      - name: Run Black
+        run: poetry run black .
+
+      - name: Run Ruff
+        run: |
+          poetry run ruff check --select I --fix
+          poetry run ruff check --fix
+
+      - name: Run Mypy
+        run: poetry run mypy .
+
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out the codes
+        uses: actions/checkout@v2
+
+      - name: Setup python environment
+        id: setup-python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.13"
+
+      - name: Cache Poetry
+        id: cache-poetry
+        uses: actions/cache@v4
+        with:
+          key: poetry-1.8.5
+          path: ~/.local/
+
+      - name: Install Poetry
+        if: steps.cache-poetry.outputs.cache-hit != 'true'
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 - --version 1.8.5
+
+      - name: Register Poetry bin
+        run: echo "${HOME}/.poetry/bin" >> $GITHUB_PATH
+
+      - name: Cache dependencies
+        id: cache-venv
+        uses: actions/cache@v4
+        with:
+          key: python-${{ steps.setup-python.outputs.python-version }}-poetry-lock-${{ hashFiles('poetry.lock') }}-toml-${{ hashFiles('pyproject.toml') }}-poetry-1.8.5
+          path: /home/runner/.cache/pypoetry/virtualenvs/
+
+      - name: Install dependencies
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: poetry install --no-root
+
+      - name: Run tests
+        run: |
+          poetry run coverage run -m pytest .
+          poetry run coverage report -m
+
+처음에는 커밋 푸시를 남겼을 때 계속 오류가 났었다 구글링을 통해 cashe@v2는 현 시간 완전히 폐지가 되어서
+v3 또는 v4로 수정했더니 완전히 잘 돌아갈 수 있었다
+
+poetry 버전은 웬만해서는 바뀌지 않는다 따라서 매 번 새롭게 설치하는 대신에
+미리 캐시해 둔 poetry 를 사용하면 다운로드와 설치에 필요한 시간을 절약할 수 있다.
+
+종속성 역시 프로젝트가 안정화 되고 나면 새로운 종속성이 추가되거나 삭제되는 일이 적기 때문에 캐시를 사용하면 다운로드와 설치 시간를 건너 뛰고
+시간을 절약할 수 있습니다.
+-----------------------
+
+github action  스크립트에 대한 코드 설명
+1. on: push → 액션이 언제 실행되는지를 정의합니다.  on: push 라면, push 할 때마다 실행합니다.
+2. jobs→ 하나의 workflow 는 여러개의 job 으로 구성됩니다.
+        2개의 job 을 생성했습니다. static-analysis 와 test job 을 2개로 쪼갠 이유는 실행 속도를 개선하기 위해서 입니다.
+        프로젝트가 점점 커지게 되면 가장 오래 걸리는 작업이 mypy 실행과 전체 단위 테스트 실행인데,
+        이 둘을 서로 쪼개 병렬로 실행하면 전체 CI 가 더 빨리 끝납니다.
+3. runs-on → job 이 실행되는 machine 을 의미합니다.
+4. steps → 하나의 job 은 여러개의 step 으로 구성됩니다. step 은 명령을 실행하거나 다른 action 을 실행합니다.
+5. uses → 실행할 action 을 가리킵니다.
+6. with → action 에 전달할 parameter 변수입니다.
+7. run → 실행할 명령어입니다.
+8. run: | → yaml 문법입니다. | (파이프라인)을 사용해 value 가 여러 줄(multiline) 이라는 것을 의미합니다.

@@ -1,0 +1,23 @@
+1. poetry란 파이썬 패키지 관리 및 가상환경 관리하는 도구이며 pyproject.toml 기반으로 프로젝트에 의존성을 관리한다.
+ex) Poetry 설치 : curl -sSL https://install.python-poetry.org | python3 - --버전
+    프로젝트 생성 : poetry new myproject
+    프로젝트 폴더로 이동 : cd myproject
+
+2. FastAPI는 파이썬 기반 웹 프레임워크이며 빠른 속도, 자동 문서화를 제공한다.
+
+3. black은 코드 자동 정렬을 해주고, isort는 import구문을 정렬해주며, ruff는 빠른 속도의 린터를 해주고 일부 포멧팅 기능을 해준다
+ex) black 실행
+    poetry run black .
+
+    isort 실행
+    poetry run isort .
+
+    ruff 실행 (lint 검사)
+    poetry run ruff check .
+
+    ruff 자동 수정
+    poetry run ruff check . --fix
+
+4. mypy는 파이썬의 타입 힌트를 검사해주는 도구이다. 런타임 전에 미리 오류를 잡을 수 있다.
+
+5. pytest는 파이썬 테스트 프레임워크이다. 간단한 문법과 다양한 플러그인을 제공한다.

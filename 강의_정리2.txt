@@ -1,0 +1,74 @@
+1. shell script 란 무엇인지 이해하고 간단한 shell script 작성법에 대해서 이해하고 작성할 줄 안다.
+2. Github Actions 란 무엇인지 이해하고 어떻게 활용할 수 있는지 알고 있어야 한다.
+3. Github Actions 의 동작을 위한 스크립트 작성법을 이해하고 작성할 줄 알아야 한다.
+4. Github Actions 에서 Cache 의 동작방식에 대해서 이해하고 이를 적용하여 어떤 이점을 가질 수 있는지 이해할 수 있어야 한다.
+5. spec API 란 무엇인지 이해하고 활용할 수 있어야한다.
+6. FastAPI 의 내부에 구현된 모듈, 함수를 이용하여 라우터를 구성할 줄 알아야 한다.
+
+
+--------------
+# # 실전 문제
+# from datetime import datetime, timedelta
+#
+# # literal을 쓰지 않고 상수를 쓰는 이유
+# # 2라는 숫자에 "이게 배송일이야"라고 배경을 모르는 사람들 (미래의 동료 또는 나 자신)에게 알려주는 역할을 합니다,
+# # magic number 를 쓰지 말자
+# DELIVERY_DAYS = 2
+#
+#
+# def _is_holiday(day: datetime) -> bool:
+#     return day.weekday() >= 5
+#
+#
+# def get_eta(purchase_date: datetime) -> datetime:
+#     current_date = purchase_date
+#     remaining_days = DELIVERY_DAYS
+#
+#     while remaining_days > 0:
+#         current_date += timedelta(days=1)
+#         if not _is_holiday(current_date):
+#             remaining_days -= 1
+#
+#     return current_date
+#
+#
+# def test_get_eta_2023_12_01() -> None:
+#     result = get_eta(datetime(2023, 12, 1))
+#     assert result == datetime(2023, 12, 4)
+#
+#
+# def test_get_eta_2024_12_31() -> None:
+#     """
+#     공휴일 정보가 없어서 1월 1일도 평일로 취급됩니다.
+#     """
+#     result = get_eta(datetime(2024, 12, 31))
+#     assert result == datetime(2025, 1, 2)
+#
+#
+# def test_get_eta_2024_02_28() -> None:
+#     result = get_eta(datetime(2024, 2, 28))
+#     assert result == datetime(2024, 3, 1)
+#
+#
+# def test_get_eta_2023_02_28() -> None:
+#     result = get_eta(datetime(2023, 2, 28))
+#     assert result == datetime(2023, 3, 2)
+
+
+----------
+# # 제품 코드
+# def add(a: int, b: int) -> int:
+#     return a + b
+#
+# # 테스트 코드
+# def test_add() -> None:
+#     # Given: 재료를 준비합니다.
+#     # 버그는 "경계"를 좋아합니다.
+#     # int의 경우에는 -1, 0, 1
+#     a, b = 1, 1
+#
+#     # When: 테스트 대상이 되는 함수를 호출합니다.
+#     result = add(a, b) # result의 타입은 int
+#
+#     # Then:
+#     assert result == 2

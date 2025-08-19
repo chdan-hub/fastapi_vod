@@ -4,8 +4,8 @@ on:
   push:
 
 jobs:
-  static-analysis: # mypy, black, ruff 등 정적 분석
-    runs-on: ubuntu-22.04 # 실제 프로덕션에서는 모든 버전을 고려하는 것이 좋다 -> 예기치 못하게 버전이 올라가서 장애나는 것을 막기 위함
+  static-analysis:
+    runs-on: ubuntu-22.04
     steps:
       - name: Check out the codes
         uses: actions/checkout@v2
@@ -37,7 +37,7 @@ jobs:
       - name: Run Mypy
         run: poetry run mypy .
 
-  test: # 전체 테스트 실핼
+  test:
     runs-on: ubuntu-22.04
     steps:
       - name: Check out the codes

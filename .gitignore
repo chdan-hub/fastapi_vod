@@ -1,3 +1,5 @@
 .idea/
 __pucache__/
 .coverage
+.qudo
+.dmypy.json

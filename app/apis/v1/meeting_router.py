@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, HTTPException
 from starlette.status import (
     HTTP_204_NO_CONTENT,
@@ -18,6 +17,8 @@ from app.service.meeting_service_mysql import (
     service_create_meeting_mysql,
     service_get_meeting_mysql,
     service_update_meeting_date_range_mysql,
+    service_update_meeting_location_mysql,
+    service_update_meeting_title_mysql,
 )
 
 edgedb_router = APIRouter(prefix="/v1/edgedb/meetings", tags=["Meeting"], redirect_slashes=False)
@@ -113,6 +114,11 @@ async def api_update_meeting_title_edgedb(
 async def api_update_meeting_title_mysql(
     meeting_url_code: str, update_meeting_title_request: UpdateMeetingTitleRequest
 ) -> None:
+    updated = await service_update_meeting_title_mysql(meeting_url_code, update_meeting_title_request.title)
+    if not updated:
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND, detail=f"meeting with url_code: {meeting_url_code} not found"
+        )
     return None
 
 
@@ -135,4 +141,11 @@ async def api_update_meeting_location_edgedb(
 async def api_update_meeting_location_mysql(
     meeting_url_code: str, update_meeting__location_request: UpdateMeetingLocationRequest
 ) -> None:
+    updated = await service_update_meeting_location_mysql(
+        meeting_url_code, update_meeting__location_request.location
+    )
+    if not updated:
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND, detail=f"meeting with url_code: {meeting_url_code} not found"
+        )
     return None
